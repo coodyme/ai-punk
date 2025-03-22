@@ -1,0 +1,48 @@
+{
+  "name": "ai-punk",
+  "version": "1.0.0",
+  "description": "A browser-based multiplayer game with a cyberpunk theme.",
+  "type": "module",
+  "scripts": {
+    "server": "node server/server.js",
+    "client": "webpack --config webpack.client.js",
+    "migration:generate": "typeorm migration:generate -n",
+    "migration:run": "typeorm migration:run",
+    "migration:revert": "typeorm migration:revert",
+    "seed": "node server/seeds/index.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.7.1",
+    "reflect-metadata": "^0.2.2",
+    "socket.io": "^4.0.0",
+    "three": "^0.130.0",
+    "typeorm": "^0.2.41"
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-class-properties": "^7.14.5",
+    "@babel/plugin-proposal-decorators": "^7.14.5",
+    "babel-loader": "^8.1.0",
+    "css-loader": "^5.0.0",
+    "style-loader": "^2.0.0",
+    "webpack": "^5.0.0",
+    "webpack-cli": "^4.0.0"
+  },
+  "keywords": [
+    "game",
+    "multiplayer",
+    "cyberpunk",
+    "javascript",
+    "threejs",
+    "socketio"
+  ],
+  "author": "coodyme",
+  "license": "MIT",
+  "packageManager": "yarn@1.22.22",
+  "engines": {
+    "node": "18.18.2"
+  }
+}

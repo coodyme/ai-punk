@@ -1,8 +1,7 @@
-const Player = require('../models/player');
-const GameService = require('../services/gameService');
+import Player from '../database/models/player.model.js';
 
 // Create a new player
-exports.createPlayer = async (req, res) => {
+export const createPlayer = async (req, res) => {
     const { username, password } = req.body;
     try {
         const newPlayer = new Player({ username, password });
@@ -14,10 +13,10 @@ exports.createPlayer = async (req, res) => {
 };
 
 // Get player data
-exports.getPlayer = async (req, res) => {
-    const { playerId } = req.params;
+export const getPlayer = async (req, res) => {
+    const { id } = req.params;
     try {
-        const player = await Player.findById(playerId);
+        const player = await Player.findById(id);
         if (!player) {
             return res.status(404).json({ message: 'Player not found' });
         }
@@ -28,11 +27,11 @@ exports.getPlayer = async (req, res) => {
 };
 
 // Update player data
-exports.updatePlayer = async (req, res) => {
-    const { playerId } = req.params;
+export const updatePlayer = async (req, res) => {
+    const { id } = req.params;
     const updates = req.body;
     try {
-        const updatedPlayer = await Player.findByIdAndUpdate(playerId, updates, { new: true });
+        const updatedPlayer = await Player.findByIdAndUpdate(id, updates, { new: true });
         if (!updatedPlayer) {
             return res.status(404).json({ message: 'Player not found' });
         }
@@ -43,10 +42,10 @@ exports.updatePlayer = async (req, res) => {
 };
 
 // Delete player
-exports.deletePlayer = async (req, res) => {
-    const { playerId } = req.params;
+export const deletePlayer = async (req, res) => {
+    const { id } = req.params;
     try {
-        const deletedPlayer = await Player.findByIdAndDelete(playerId);
+        const deletedPlayer = await Player.findByIdAndDelete(id);
         if (!deletedPlayer) {
             return res.status(404).json({ message: 'Player not found' });
         }
