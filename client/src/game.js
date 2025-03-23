@@ -134,6 +134,9 @@ export class Game {
     animate() {
         requestAnimationFrame(() => this.animate());
         
+        // Only continue if the game is still active
+        if (!this.renderer) return;
+        
         // Update player
         if (this.player) {
             this.player.update(this.input.getMovementInput());
@@ -163,11 +166,11 @@ export class Game {
         }
         
         // Update world
-        if (this.world) {
+        if (this.world && this.player) { // Add check for this.player here
             this.world.update(this.player.getPosition());
         }
         
-        // Render scene
+        // Render scene (this.renderer is guaranteed to be non-null here)
         this.renderer.render(this.scene, this.camera);
     }
     
@@ -440,15 +443,6 @@ export class Game {
     }
 
     // Add this method to the Game class
-    forceAdminStatus(status = true) {
-        if (this.player) {
-            this.player.isAdmin = status;
-            console.log(`Admin status MANUALLY set to: ${status}`);
-            console.log('Player data after manual override:', this.player);
-        }
-    }
-
-    // Add this method to the Game class
     logout() {
         console.log('Logging out...');
         
@@ -461,9 +455,18 @@ export class Game {
         // Remove event listeners
         window.removeEventListener('resize', this.handleResize);
         
-        // Remove renderer from DOM
+        // Remove renderer from DOM - add parent check
         if (this.renderer && this.renderer.domElement) {
-            document.body.removeChild(this.renderer.domElement);
+            const parent = this.renderer.domElement.parentNode;
+            if (parent) {
+                parent.removeChild(this.renderer.domElement);
+            }
+        }
+        
+        // Dispose of three.js resources
+        if (this.renderer) {
+            this.renderer.dispose();
+            this.renderer = null;
         }
         
         // Clear player data
@@ -485,9 +488,6 @@ export class Game {
         }
         
         console.log('Logout complete');
-        
-        // Reload page to ensure clean state
-        // window.location.reload(); // Uncomment if you want a full page reload
     }
 
     // Add the toggleCamera method

@@ -67,6 +67,12 @@ const Player = new EntitySchema({
       type: 'int',
       default: 0
     },
+    lastOnline: {
+      name: 'last_online',
+      type: 'timestamp',
+      nullable: true,
+      default: null
+    },
     createdAt: {
       name: 'created_at',
       type: 'timestamp',
