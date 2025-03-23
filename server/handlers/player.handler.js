@@ -20,8 +20,11 @@ export const authenticatePlayer = async (token) => {
             throw new Error('Player not found');
         }
         
-        // Don't send the password back
+        // Don't send the password back but DO include the role
         delete player.password;
+        
+        // If using TypeORM with a role property
+        console.log('Player authenticated:', player.username, 'Role:', player.role);
         
         return player;
     } catch (error) {

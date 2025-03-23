@@ -1,6 +1,6 @@
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const Player = require('../models/player');
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import Player from '../models/player';
 
 const saltRounds = 10;
 const jwtSecret = 'your_jwt_secret'; // Replace with your actual secret
@@ -32,8 +32,8 @@ const validateToken = (token) => {
     }
 };
 
-module.exports = {
+export {
     register,
     login,
-    validateToken,
+    validateToken
 };

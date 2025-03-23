@@ -77,12 +77,17 @@ const getActivePlayersData = (gameNamespace) => {
     const players = [];
     gameNamespace.sockets.forEach((socket) => {
         if (socket.player) {
+            // Debug the player role data being sent
+            console.log(`Player ${socket.player.username} - Role: ${socket.player.role}, isAdmin set to: ${socket.player.role === 'admin'}`);
+            
             players.push({
                 id: socket.player.id,
                 username: socket.player.username,
                 position: socket.player.position || { x: 0, y: 0, z: 0 },
                 health: socket.player.health,
-                level: socket.player.level
+                level: socket.player.level,
+                isAdmin: socket.player.role === 'admin',
+                role: socket.player.role // Also send the actual role for debugging
             });
         }
     });

@@ -19,11 +19,21 @@ const Player = new EntitySchema({
       type: 'varchar',
       nullable: false
     },
+    email: {
+      type: 'varchar',
+      unique: true,
+      nullable: false
+    },
+    role: {
+      type: 'varchar',
+      default: 'user'
+    },
     uniqueId: {
       name: 'unique_id',
       type: 'varchar',
       unique: true,
-      nullable: false
+      nullable: true,
+      default: null // We'll generate this in the seed function instead
     },
     health: {
       type: 'int',
@@ -32,6 +42,12 @@ const Player = new EntitySchema({
     stamina: {
       type: 'int',
       default: 100
+    },
+    // Add position field
+    position: {
+      type: 'jsonb',
+      nullable: true,
+      default: null // We'll set it explicitly in the seed function
     },
     inventory: {
       type: 'jsonb',

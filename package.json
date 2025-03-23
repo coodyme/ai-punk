@@ -6,30 +6,41 @@
   "scripts": {
     "server": "node server/server.js",
     "client": "webpack --config webpack.client.js",
-    "migration:generate": "typeorm migration:generate -n",
-    "migration:run": "typeorm migration:run",
-    "migration:revert": "typeorm migration:revert",
-    "seed": "node server/seeds/index.js"
+    "dev": "webpack serve --config webpack.client.js --open",
+    "mg": "typeorm migration:generate -n",
+    "mr": "typeorm migration:run",
+    "mrt": "typeorm migration:revert",
+    "seed": "node server/database/seed.js"
   },
   "dependencies": {
+    "@tweenjs/tween.js": "^25.0.0",
     "bcrypt": "^5.0.1",
+    "dat.gui": "^0.7.9",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.7.1",
     "reflect-metadata": "^0.2.2",
     "socket.io": "^4.0.0",
-    "three": "^0.130.0",
+    "socket.io-client": "^4.8.1",
+    "stats.js": "^0.17.0",
+    "three": "^0.174.0",
     "typeorm": "^0.2.41"
   },
   "devDependencies": {
+    "@babel/core": "^7.26.10",
     "@babel/plugin-proposal-class-properties": "^7.14.5",
     "@babel/plugin-proposal-decorators": "^7.14.5",
+    "@babel/preset-env": "^7.26.9",
     "babel-loader": "^8.1.0",
+    "clean-webpack-plugin": "^4.0.0",
     "css-loader": "^5.0.0",
+    "html-webpack-plugin": "^5.6.3",
+    "mini-css-extract-plugin": "^2.9.2",
     "style-loader": "^2.0.0",
     "webpack": "^5.0.0",
-    "webpack-cli": "^4.0.0"
+    "webpack-cli": "^4.0.0",
+    "webpack-dev-server": "4.15.1"
   },
   "keywords": [
     "game",

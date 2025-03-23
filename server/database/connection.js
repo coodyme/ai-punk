@@ -26,7 +26,7 @@ export const initializeDatabase = async () => {
                 path.join(rootDir, 'migrations', '*.js')
             ],
             synchronize: process.env.NODE_ENV !== 'production',
-            logging: process.env.NODE_ENV === 'development'
+            //logging: process.env.NODE_ENV === 'development'
         });
         
         console.log('Database connected successfully');
