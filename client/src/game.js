@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { InputHandler } from './engine/input.js';
 import { Player, ROLES } from './entities/player.js';
 import { WorldManager } from './entities/world.js';
@@ -27,7 +26,6 @@ export class Game {
         
         // Set to topDown by default for safety - will be updated when player data is received
         this.activeCamera = 'topDown';
-        this.cameraToggleEnabled = false;
         
         // Game state
         this.health = 100;
@@ -50,7 +48,6 @@ export class Game {
         this.renderer.shadowMap.enabled = true;
         document.body.appendChild(this.renderer.domElement);
         
-        // Create camera
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.camera.position.set(0, 5, 10);
         
@@ -64,30 +61,7 @@ export class Game {
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
         this.scene.add(directionalLight);
-        
-        // Add debug controls (temporary for development)
-        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-        this.controls.enabled = false; // Disable controls by default, camera will follow player
 
-        // Add a key listener to toggle camera only for admins
-        window.addEventListener('keydown', (event) => {
-            if (event.key === 'c') {
-                // Enhanced debugging
-                console.log('C key pressed.');
-                console.log(`Player exists: ${this.player ? 'Yes' : 'No'}`);
-                console.log(`Player role: ${this.player?.role}, isAdmin: ${this.player?.isAdmin}`);
-                
-                // Use loose equality or parseInt to handle potential string/number conversion issues
-                const isAdmin = this.player && (parseInt(this.player.role) === ROLES.ADMIN);
-                if (isAdmin) {
-                    console.log('Admin access granted - toggling camera');
-                    this.toggleCamera();
-                } else {
-                    console.log('Camera toggle denied - user is not admin');
-                }
-            }
-        });
-        
         // Initialize player
         this.player = new Player(this.scene, this.camera);
         
@@ -123,7 +97,6 @@ export class Game {
         });
 
         this.freeCamera = new FreeCamera(this.player, this.camera, this.renderer, this.controls);
-
         // Start game loop
         this.animate();
         
@@ -490,40 +463,6 @@ export class Game {
         console.log('Logout complete');
     }
 
-    // Add the toggleCamera method
-    toggleCamera() {
-        // Always convert role to number for comparison
-        const isAdmin = this.player && (Number(this.player.role) === ROLES.ADMIN);
-        if (!this.player || !isAdmin) {
-            console.log('Camera toggle denied - user is not admin');
-            return;
-        }
-        
-        console.log(`Switching camera from ${this.activeCamera}`);
-        
-        // Release pointer lock before changing cameras
-        if (document.pointerLockElement) {
-            document.exitPointerLock();
-        }
-        
-        // Store current camera mode to avoid race conditions
-        const currentCamera = this.activeCamera;
-        
-        // Wait a brief moment for pointer lock to fully release
-        setTimeout(() => {
-            if (currentCamera === 'free') {
-                this.activeCamera = 'topDown';
-                this.freeCamera.setEnabled(false);
-                console.log('Switched to topDown camera');
-            } else {
-                this.activeCamera = 'free';
-                this.freeCamera.setEnabled(true);
-                this.freeCamera.resetCameraPosition();
-                console.log('Switched to free camera');
-            }
-        }, 100);
-    }
-
     // Modify setPlayerData in the game class to set the initial camera mode based on admin status
     setPlayerData(playerData) {
         console.log('Setting player data in Game:', playerData);
@@ -533,8 +472,13 @@ export class Game {
             this.player.setPlayerData(playerData);
         }
         
-        // Always convert to Number for consistency
-        const isAdmin = Number(playerData.role) === ROLES.ADMIN;
+        // Convert role to a Number for consistency
+        const role = Number(playerData.role);
+
+        // Set the role on the player object
+        this.player.role = role;
+        
+        const isAdmin = role === ROLES.ADMIN;
         console.log(`Role check: ${playerData.role} (${typeof playerData.role}) === ${ROLES.ADMIN} => ${isAdmin}`);
         
         if (isAdmin) {

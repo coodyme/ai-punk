@@ -17,6 +17,7 @@ export class Player {
         this.lastUpdateTime = 0;
         this.updateInterval = 100; // ms
         this.isAdmin = false; // Initialize admin status
+        this.role = 1; //Default to player role
         
         // Create player model
         this.createPlayerModel(scene);
@@ -108,6 +109,10 @@ export class Player {
     setPlayerData(data) {
         this.id = data.id;
         this.username = data.username;
+        this.health = data.health;
+        this.level = data.level;
+        this.isAdmin = data.isAdmin;
+        this.role = data.role;
         
         if (data.position) {
             this.position.set(
