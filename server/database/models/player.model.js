@@ -1,5 +1,11 @@
 import { EntitySchema } from 'typeorm';
 
+// Define role constants
+export const ROLES = {
+  ADMIN: 0,
+  PLAYER: 1
+};
+
 // Define the schema without decorators
 const Player = new EntitySchema({
   name: 'Player',
@@ -25,8 +31,8 @@ const Player = new EntitySchema({
       nullable: false
     },
     role: {
-      type: 'varchar',
-      default: 'user'
+      type: 'int',
+      default: ROLES.PLAYER  // Default to regular player
     },
     uniqueId: {
       name: 'unique_id',
@@ -76,6 +82,11 @@ Player.methods = {
       this.level += 1;
       this.experience = 0; // Reset experience after leveling up
     }
+  },
+  
+  // Add a method to check if player is admin
+  isAdmin() {
+    return this.role === ROLES.ADMIN;
   }
 };
 

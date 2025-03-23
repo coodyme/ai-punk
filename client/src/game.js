@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { InputHandler } from './engine/input.js';
-import { Player } from './entities/player.js';
+import { Player, ROLES } from './entities/player.js';
 import { WorldManager } from './entities/world.js';
 import { setupGameSocketHandlers } from './utils/socket.js';
 import OtherPlayer from './entities/other-player.js';
@@ -24,8 +24,10 @@ export class Game {
         this.controls = null;
         this.topDownCamera = null;
         this.freeCamera = null;
-        this.activeCamera = 'free'; // Default for admins, will be set to 'topDown' for regular users
-        this.cameraToggleEnabled = false; // Will be true for admins only
+        
+        // Set to topDown by default for safety - will be updated when player data is received
+        this.activeCamera = 'topDown';
+        this.cameraToggleEnabled = false;
         
         // Game state
         this.health = 100;
@@ -69,36 +71,20 @@ export class Game {
 
         // Add a key listener to toggle camera only for admins
         window.addEventListener('keydown', (event) => {
-            // Original 'c' key logic for toggling camera
             if (event.key === 'c') {
                 // Enhanced debugging
                 console.log('C key pressed.');
                 console.log(`Player exists: ${this.player ? 'Yes' : 'No'}`);
-                console.log(`Player admin status: isAdmin=${this.player?.isAdmin}`);
-                console.log(`Player complete data:`, this.player);
+                console.log(`Player role: ${this.player?.role}, isAdmin: ${this.player?.isAdmin}`);
                 
-                // More explicit check with loose equality
-                if (this.player && this.player.isAdmin == true) {
-                    console.log('Admin access granted - toggling free camera');
-                    this.controls.enabled = !this.controls.enabled;
-                    
-                    // When enabling controls, set initial camera position relative to player
-                    if (this.controls.enabled) {
-                        const playerPos = this.player.getPosition();
-                        this.camera.position.set(
-                            playerPos.x, 
-                            playerPos.y + 10, 
-                            playerPos.z + 20
-                        );
-                        this.controls.target.copy(playerPos);
-                    }
+                // Use loose equality or parseInt to handle potential string/number conversion issues
+                const isAdmin = this.player && (parseInt(this.player.role) === ROLES.ADMIN);
+                if (isAdmin) {
+                    console.log('Admin access granted - toggling camera');
+                    this.toggleCamera();
+                } else {
+                    console.log('Camera toggle denied - user is not admin');
                 }
-            }
-            
-            // TEMPORARY: Development-only admin toggle with 'a' key
-            if (event.key === 'a') {
-                console.log('Forcing admin status for debug purposes');
-                this.forceAdminStatus(true);
             }
         });
         
@@ -136,16 +122,7 @@ export class Game {
             angleFactor: 5
         });
 
-        this.freeCamera = new FreeCamera(this.player, this.camera, this.renderer);
-
-        // Add a better key listener for camera toggling
-        window.addEventListener('keydown', (event) => {
-            // Toggle between free and topdown camera when 'c' is pressed for admins
-            if (event.key === 'c' && this.player && this.player.isAdmin) {
-                console.log('Camera toggle requested by admin');
-                this.toggleCamera();
-            }
-        });
+        this.freeCamera = new FreeCamera(this.player, this.camera, this.renderer, this.controls);
 
         // Start game loop
         this.animate();
@@ -161,13 +138,17 @@ export class Game {
         if (this.player) {
             this.player.update(this.input.getMovementInput());
             
-            // Update appropriate camera
-            if (this.activeCamera === 'topDown') {
-                this.topDownCamera.update(0.016);
-                this.freeCamera.setEnabled(false);
-            } else if (this.activeCamera === 'free') {
-                this.freeCamera.update(0.016);
-                this.freeCamera.setEnabled(true);
+            // Update appropriate camera with better error handling
+            try {
+                if (this.activeCamera === 'topDown' && this.topDownCamera) {
+                    this.topDownCamera.update(0.016);
+                    if (this.freeCamera) this.freeCamera.setEnabled(false);
+                } else if (this.activeCamera === 'free' && this.freeCamera) {
+                    this.freeCamera.update(0.016);
+                    this.freeCamera.setEnabled(true);
+                }
+            } catch (error) {
+                console.error('Error updating camera:', error);
             }
             
             // Emit position update to server (throttled)
@@ -511,37 +492,61 @@ export class Game {
 
     // Add the toggleCamera method
     toggleCamera() {
-        if (!this.player || !this.player.isAdmin) {
+        // Always convert role to number for comparison
+        const isAdmin = this.player && (Number(this.player.role) === ROLES.ADMIN);
+        if (!this.player || !isAdmin) {
             console.log('Camera toggle denied - user is not admin');
             return;
         }
         
         console.log(`Switching camera from ${this.activeCamera}`);
         
-        if (this.activeCamera === 'free') {
-            this.activeCamera = 'topDown';
-            console.log('Switched to topDown camera');
-        } else {
-            this.activeCamera = 'free';
-            // Reset free camera position when switching to it
-            this.freeCamera.resetCameraPosition();
-            console.log('Switched to free camera');
+        // Release pointer lock before changing cameras
+        if (document.pointerLockElement) {
+            document.exitPointerLock();
         }
+        
+        // Store current camera mode to avoid race conditions
+        const currentCamera = this.activeCamera;
+        
+        // Wait a brief moment for pointer lock to fully release
+        setTimeout(() => {
+            if (currentCamera === 'free') {
+                this.activeCamera = 'topDown';
+                this.freeCamera.setEnabled(false);
+                console.log('Switched to topDown camera');
+            } else {
+                this.activeCamera = 'free';
+                this.freeCamera.setEnabled(true);
+                this.freeCamera.resetCameraPosition();
+                console.log('Switched to free camera');
+            }
+        }, 100);
     }
 
     // Modify setPlayerData in the game class to set the initial camera mode based on admin status
     setPlayerData(playerData) {
-        // Existing player data setting code...
+        console.log('Setting player data in Game:', playerData);
         
-        // Set initial camera mode based on admin status
-        if (playerData.isAdmin) {
-            this.activeCamera = 'free';
-            this.cameraToggleEnabled = true;
-            console.log('Admin user detected - starting with free camera');
-        } else {
-            this.activeCamera = 'topDown';
-            this.cameraToggleEnabled = false;
-            console.log('Regular user detected - using topDown camera');
+        // Set player data (existing functionality)
+        if (this.player) {
+            this.player.setPlayerData(playerData);
         }
+        
+        // Always convert to Number for consistency
+        const isAdmin = Number(playerData.role) === ROLES.ADMIN;
+        console.log(`Role check: ${playerData.role} (${typeof playerData.role}) === ${ROLES.ADMIN} => ${isAdmin}`);
+        
+        if (isAdmin) {
+            console.log('Admin user detected - starting with free camera');
+            this.activeCamera = 'free';
+            this.player.isAdmin = true;
+        } else {
+            console.log('Regular user detected - using topDown camera only');
+            this.activeCamera = 'topDown';
+            this.player.isAdmin = false;
+        }
+        
+        console.log(`Camera mode set to: ${this.activeCamera}`);
     }
 }

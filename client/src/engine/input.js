@@ -94,8 +94,9 @@ export class InputHandler {
         });
         
         // Add pointer lock functionality
-        document.addEventListener('click', () => {
-            if (!this.pointerLocked) {
+        document.addEventListener('click', (event) => {
+            // Only try to lock if not already locked
+            if (!document.pointerLockElement) {
                 this.lockPointer();
             }
         });
@@ -106,34 +107,37 @@ export class InputHandler {
         });
         
         // Handle pointer lock error
-        document.addEventListener('pointerlockerror', () => {
-            console.error('Pointer lock failed');
+        document.addEventListener('pointerlockerror', (event) => {
+            console.error('Pointer lock failed:', event);
         });
         
-        // Original click handler for attacks
+        // Modify the attack click handler to prevent conflict with OrbitControls
         window.addEventListener('click', (event) => {
-            // Left mouse button attack (original code)
-            if (this.pointerLocked) {
-                // Get the equipped weapon (if any)
-                const equipIndex = this.findEquippedWeaponIndex();
-                
-                if (equipIndex >= 0) {
-                    // Get a point in front of the player for the attack
-                    const position = this.player.getPosition();
-                    const rotation = this.player.rotation;
+            // Only process click attacks when pointer is locked
+            if (this.pointerLocked && this.player && this.player.inventory) {
+                try {
+                    // Get the equipped weapon (if any)
+                    const equipIndex = this.findEquippedWeaponIndex();
                     
-                    const targetPosition = {
-                        x: position.x + Math.sin(rotation) * 2,
-                        y: position.y,
-                        z: position.z + Math.cos(rotation) * 2
-                    };
-                    
-                    this.socket.emit('player:attack', {
-                        weaponId: this.player.inventory[equipIndex].id,
-                        position: targetPosition,
-                        // Target ID if we have a target system
-                        targetId: null
-                    });
+                    if (equipIndex >= 0) {
+                        // Get a point in front of the player for the attack
+                        const position = this.player.getPosition();
+                        const rotation = this.player.rotation;
+                        
+                        const targetPosition = {
+                            x: position.x + Math.sin(rotation) * 2,
+                            y: position.y,
+                            z: position.z + Math.cos(rotation) * 2
+                        };
+                        
+                        this.socket.emit('player:attack', {
+                            weaponId: this.player.inventory[equipIndex].id,
+                            position: targetPosition,
+                            targetId: null
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error processing attack:', error);
                 }
             }
         });
@@ -142,12 +146,24 @@ export class InputHandler {
     lockPointer() {
         const gameCanvas = document.querySelector('canvas');
         if (gameCanvas) {
-            gameCanvas.requestPointerLock = 
-                gameCanvas.requestPointerLock || 
-                gameCanvas.mozRequestPointerLock || 
-                gameCanvas.webkitRequestPointerLock;
-            
-            gameCanvas.requestPointerLock();
+            try {
+                // Request pointer lock with better error handling
+                gameCanvas.requestPointerLock = 
+                    gameCanvas.requestPointerLock || 
+                    gameCanvas.mozRequestPointerLock || 
+                    gameCanvas.webkitRequestPointerLock;
+                
+                // Make sure OrbitControls can't interfere during this operation
+                if (window.game && window.game.freeCamera) {
+                    window.game.freeCamera.setEnabled(false);
+                }
+                
+                gameCanvas.requestPointerLock();
+            } catch (error) {
+                console.error('Error requesting pointer lock:', error);
+            }
+        } else {
+            console.warn('Canvas element not found for pointer lock');
         }
     }
     

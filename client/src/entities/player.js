@@ -1,5 +1,11 @@
 import * as THREE from 'three';
 
+// Define role constants on client side as well
+export const ROLES = {
+    ADMIN: 0,
+    PLAYER: 1
+};
+
 export class Player {
     constructor(scene, camera) {
         this.id = null;
@@ -112,21 +118,17 @@ export class Player {
             this.rotation = data.position.rotation || 0;
         }
         
-        // Very explicit debug and admin handling
-        console.log('Full player data received:', JSON.stringify(data));
+        // Ensure role is stored as a number
+        this.role = parseInt(data.role);
         
-        // Check isAdmin with loose equality to handle true/false/undefined properly
-        if (data.isAdmin == true) {
-            this.isAdmin = true;
-            console.log(`Setting ${this.username} as ADMIN from isAdmin property`);
-        } else if (data.role === 'admin') {
-            this.isAdmin = true;
-            console.log(`Setting ${this.username} as ADMIN from role property`);
-        } else {
-            this.isAdmin = false;
-            console.log(`${this.username} is NOT an admin - isAdmin: ${data.isAdmin}, role: ${data.role}`);
-        }
+        // Compute isAdmin based on numeric role
+        this.isAdmin = this.role === ROLES.ADMIN;
         
-        console.log(`FINAL PLAYER STATUS: ${this.username}, isAdmin: ${this.isAdmin}`);
+        console.log(`Player ${this.username} - Role: ${this.role} (${typeof this.role}), isAdmin: ${this.isAdmin}`);
+    }
+    
+    // Add a helper method to check if player is admin
+    isAdminUser() {
+        return this.role === ROLES.ADMIN;
     }
 }

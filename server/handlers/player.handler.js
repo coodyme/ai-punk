@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { getConnection } from 'typeorm';
-import Player from '../database/models/player.model.js';
+import Player, { ROLES } from '../database/models/player.model.js';
 
 /**
  * Authenticate a player using JWT token
@@ -20,10 +20,10 @@ export const authenticatePlayer = async (token) => {
             throw new Error('Player not found');
         }
         
-        // Don't send the password back but DO include the role
+        // Don't send the password back
         delete player.password;
         
-        // If using TypeORM with a role property
+        // Log player authentication with their numeric role
         console.log('Player authenticated:', player.username, 'Role:', player.role);
         
         return player;

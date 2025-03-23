@@ -40,6 +40,14 @@ export function connectToServer(token) {
 export function setupGameSocketHandlers(socket, gameState) {
     socket.on('game:init', (data) => {
         console.log('Game initialized:', data);
+        
+        // Find own player data to set camera mode properly
+        const ownPlayerData = data.players.find(p => p.id === socket.id);
+        if (ownPlayerData) {
+            // Set player data first to configure camera properly
+            gameState.setPlayerData(ownPlayerData);
+        }
+        
         gameState.initializePlayers(data.players);
     });
     

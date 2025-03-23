@@ -3,6 +3,7 @@ import { handleCombat } from './handlers/combat.handler.js';
 import { handleItemInteraction } from './handlers/item.handler.js';
 import { handleChat } from './handlers/chat.handler.js';
 import { authenticatePlayer, disconnectPlayer } from './handlers/player.handler.js';
+import { ROLES } from './database/models/player.model.js';
 
 /**
  * Initialize game server with socket.io
@@ -77,8 +78,10 @@ const getActivePlayersData = (gameNamespace) => {
     const players = [];
     gameNamespace.sockets.forEach((socket) => {
         if (socket.player) {
-            // Debug the player role data being sent
-            console.log(`Player ${socket.player.username} - Role: ${socket.player.role}, isAdmin set to: ${socket.player.role === 'admin'}`);
+            // Convert role to isAdmin boolean for client compatibility
+            const isAdmin = socket.player.role === ROLES.ADMIN;
+            
+            console.log(`Player ${socket.player.username} - Role: ${socket.player.role}, isAdmin: ${isAdmin}`);
             
             players.push({
                 id: socket.player.id,
@@ -86,8 +89,16 @@ const getActivePlayersData = (gameNamespace) => {
                 position: socket.player.position || { x: 0, y: 0, z: 0 },
                 health: socket.player.health,
                 level: socket.player.level,
-                isAdmin: socket.player.role === 'admin',
-                role: socket.player.role // Also send the actual role for debugging
+                isAdmin: isAdmin,
+                role: socket.player.role
+            });
+
+            // In the handler that sends player data to the client:
+            console.log('Sending player data to client:', {
+                id: socket.player.id,
+                username: socket.player.username,
+                role: socket.player.role,
+                isAdmin: socket.player.role === ROLES.ADMIN
             });
         }
     });

@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import initializeDatabase from './connection.js';
-import Player from './models/player.model.js';
+import Player, { ROLES } from './models/player.model.js';
 import Item from './models/item.model.js';
 import World from './models/world.model.js';
 import bcrypt from 'bcrypt';
@@ -102,17 +102,17 @@ async function seedPlayers(connection) {
     const players = [
         {
             username: 'admin',
-            password: await bcrypt.hash('admin123', 10),
+            password: await bcrypt.hash('123', 10),
             email: 'admin@example.com',
-            role: 'admin',
+            role: ROLES.ADMIN,  // Use the ADMIN enum value (0)
             uniqueId: `admin_${Date.now()}`,
             position: JSON.stringify({ x: 10, y: 0, z: 10, rotation: 0 })
         },
         {
             username: 'player1',
-            password: await bcrypt.hash('player123', 10),
+            password: await bcrypt.hash('123', 10),
             email: 'player1@example.com',
-            role: 'player',
+            role: ROLES.PLAYER,  // Use the PLAYER enum value (1)
             uniqueId: `player1_${Date.now()}`,
             position: JSON.stringify({ x: 10, y: 0, z: 10, rotation: 0 })
         }
